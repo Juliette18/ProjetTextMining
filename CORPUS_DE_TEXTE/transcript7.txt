@@ -1,0 +1,36 @@
+﻿Welcome back. This module, we are going to talk about
+Basic Natural Language Processing, and how it relates to the Text Mining in
+Python that we have been talking about. So, what is Natural Language? Well, any language that is used in
+everyday communication by humans is natural language. As compared to something that
+is artificial language or a computer language like Python. Languages such as English, or
+Chinese, or Hindi, or Russian, or Spanish are all natural languages. But you know, also the language
+we use in short text messages or on tweets is also, by this definition
+natural language, isn't it? So then we have to kind
+of address these as well. So then,
+what is Natural Language Processing? Any computation or
+manipulation of natural language to get some insights
+about how words mean and how sentences are constructed
+is natural language processing. One thing to consider when we look at
+natural language is that these evolve. For example, new words get added. Like selfie or photobomb. Old words lose popularity. How often have you used thou shalt? Meanings of words change. Words such as learn in Old English meant
+exactly opposite of what it means now. It used to mean teach. And then language rules
+themselves may change. So for example, in Old English
+the position of the verb was at the end of the sentence, rather than
+the middle as we come to know today. So when we talk about NLP tasks,
+what do we mean? ....
+It could mean as simple as counting the words or counting the frequency of a
+word or finding unique words in a corpus, and then build on to find
+sentence boundaries or parts of speech to tag a sentence
+with its part of speech, parse the sentence structure, try to
+understand more grammatical constructs and see whether they apply for
+a particular sentence. Identify semantic roles
+of how these words play. For example, if you have
+a sentence like Mary loves John. Then you know that Mary is the subject. John is the object, and
+love is the verb that connects them. You have the other NLP tasks like
+identifying entities in a sentence. So this is called name entity recognition,
+and in our previous example of Mary loves
+John, Mary and John are the two entities. Both persons in that sentence. And then you could have more complicated, more complex tasks like finding which
+pronoun refers to which entity. This is called co-ref resolution,
+or co-reference resolution. And there are many, many more tasks
+that you would do for on free text. The challenge is how to do that
+in an efficient manner, and how it applies to overall text mining. And you're going to see some of
+those in the next few videos.

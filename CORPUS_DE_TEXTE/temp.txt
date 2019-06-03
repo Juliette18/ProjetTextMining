@@ -1,0 +1,244 @@
+﻿In this paper we consider the problem of modeling text corpora and other collections of discrete
+data. The goal is to find short descriptions of the members of a collection that enable efficient
+processing of large collections while preserving the essential statistical relationships that are useful
+for basic tasks such as classification, novelty detection, summarization, and similarity and relevance
+judgments.
+Significant progress has been made on this problem by researchers in the field of information
+retrieval (IR) (Baeza-Yates and Ribeiro-Neto, 1999). The basic methodology proposed by
+IR researchers for text corpora—a methodology successfully deployed in modern Internet search
+engines—reduces each document in the corpus to a vector of real numbers, each of which represents
+ratios of counts. In the popular tf-idf scheme (Salton and McGill, 1983), a basic vocabulary
+of “words” or “terms” is chosen, and, for each document in the corpus, a count is formed of the
+number of occurrences of each word. After suitable normalization, this term frequency count is
+compared to an inverse document frequency count, which measures the number of occurrences of a word in the entire corpus (generally on a log scale, and again suitably normalized). The end result
+is a term-by-document matrix X whose columns contain the tf-idf values for each of the documents
+in the corpus. Thus the tf-idf scheme reduces documents of arbitrary length to fixed-length lists of
+numbers.
+While the tf-idf reduction has some appealing features—notably in its basic identification of sets
+of words that are discriminative for documents in the collection—the approach also provides a relatively
+small amount of reduction in description length and reveals little in the way of inter- or intradocument
+statistical structure. To address these shortcomings, IR researchers have proposed several
+other dimensionality reduction techniques, most notably latent semantic indexing (LSI) (Deerwester
+et al., 1990). LSI uses a singular value decomposition of the X matrix to identify a linear subspace
+in the space of tf-idf features that captures most of the variance in the collection. This approach can
+achieve significant compression in large collections. Furthermore, Deerwester et al. argue that the
+derived features of LSI, which are linear combinations of the original tf-idf features, can capture
+some aspects of basic linguistic notions such as synonymy and polysemy.
+To substantiate the claims regarding LSI, and to study its relative strengths and weaknesses, it is
+useful to develop a generative probabilistic model of text corpora and to study the ability of LSI to
+recover aspects of the generative model from data (Papadimitriou et al., 1998). Given a generative
+model of text, however, it is not clear why one should adopt the LSI methodology—one can attempt
+to proceed more directly, fitting the model to data using maximum likelihood or Bayesian methods.
+A significant step forward in this regard was made by Hofmann (1999), who presented the
+probabilistic LSI (pLSI) model, also known as the aspect model, as an alternative to LSI. The pLSI
+approach, which we describe in detail in Section 4.3, models each word in a document as a sample
+from a mixture model, where the mixture components are multinomial random variables that can be
+viewed as representations of “topics.” Thus each word is generated from a single topic, and different
+words in a document may be generated from different topics. Each document is represented as
+a list of mixing proportions for these mixture components and thereby reduced to a probability
+distribution on a fixed set of topics. This distribution is the “reduced description” associated with
+the document.
+While Hofmann’s work is a useful step toward probabilistic modeling of text, it is incomplete
+in that it provides no probabilistic model at the level of documents. In pLSI, each document is
+represented as a list of numbers (the mixing proportions for topics), and there is no generative
+probabilistic model for these numbers. This leads to several problems: (1) the number of parameters
+in the model grows linearly with the size of the corpus, which leads to serious problems with
+overfitting, and (2) it is not clear how to assign probability to a document outside of the training set.
+To see how to proceed beyond pLSI, let us consider the fundamental probabilistic assumptions
+underlying the class of dimensionality reduction methods that includes LSI and pLSI. All of these
+methods are based on the “bag-of-words” assumption—that the order of words in a document can
+be neglected. In the language of probability theory, this is an assumption of exchangeability for the
+words in a document (Aldous, 1985). Moreover, although less often stated formally, these methods
+also assume that documents are exchangeable; the specific ordering of the documents in a corpus
+can also be neglected.
+A classic representation theorem due to de Finetti (1990) establishes that any collection of exchangeable
+random variables has a representation as a mixture distribution—in general an infinite
+mixture. Thus, if we wish to consider exchangeable representations for documents and words, we
+need to consider mixture models that capture the exchangeability of both words and documents.
+994
+LATENT DIRICHLET ALLOCATION
+This line of thinking leads to the latent Dirichlet allocation (LDA) model that we present in the
+current paper.
+It is important to emphasize that an assumption of exchangeability is not equivalent to an assumption
+that the random variables are independent and identically distributed. Rather, exchangeability
+essentially can be interpreted as meaning “conditionally independent and identically distributed,”
+where the conditioning is with respect to an underlying latent parameter of a probability
+distribution. Conditionally, the joint distribution of the random variables is simple and factored
+while marginally over the latent parameter, the joint distribution can be quite complex. Thus, while
+an assumption of exchangeability is clearly a major simplifying assumption in the domain of text
+modeling, and its principal justification is that it leads to methods that are computationally efficient,
+the exchangeability assumptions do not necessarily lead to methods that are restricted to simple
+frequency counts or linear operations. We aim to demonstrate in the current paper that, by taking
+the de Finetti theorem seriously, we can capture significant intra-document statistical structure via
+the mixing distribution.
+It is also worth noting that there are a large number of generalizations of the basic notion of
+exchangeability, including various forms of partial exchangeability, and that representation theorems
+are available for these cases as well (Diaconis, 1988). Thus, while the work that we discuss in
+the current paper focuses on simple “bag-of-words” models, which lead to mixture distributions for
+single words (unigrams), our methods are also applicable to richer models that involve mixtures for
+larger structural units such as n-grams or paragraphs.
+The paper is organized as follows. In Section 2 we introduce basic notation and terminology.
+The LDA model is presented in Section 3 and is compared to related latent variable models in
+Section 4. We discuss inference and parameter estimation for LDA in Section 5. An illustrative
+example of fitting LDA to data is provided in Section 6. Empirical results in text modeling, text
+classification and collaborative filtering are presented in Section 7. Finally, Section 8 presents our
+conclusions.
+2. Notation and terminology
+We use the language of text collections throughout the paper, referring to entities such as “words,”
+“documents,” and “corpora.” This is useful in that it helps to guide intuition, particularly when
+we introduce latent variables which aim to capture abstract notions such as topics. It is important
+to note, however, that the LDA model is not necessarily tied to text, and has applications to other
+problems involving collections of data, including data from domains such as collaborative filtering,
+content-based image retrieval and bioinformatics. Indeed, in Section 7.3, we present experimental
+results in the collaborative filtering domain.
+Formally, we define the following terms:
+• A word is the basic unit of discrete data, defined to be an item from a vocabulary indexed by
+{1,...,V}. We represent words using unit-basis vectors that have a single component equal to
+one and all other components equal to zero. Thus, using superscripts to denote components,
+the vth word in the vocabulary is represented by a V-vector w such that wv = 1 and wu = 0 for
+u 6= v.
+• A document is a sequence of N words denoted by w = (w1,w2,...,wN), where wn is the nth
+word in the sequence.
+• A corpus is a collection of M documents denoted by D = {w1,w2,...,wM}.
+We wish to find a probabilistic model of a corpus that not only assigns high probability to
+members of the corpus, but also assigns high probability to other “similar” documents.
+3. Latent Dirichlet allocation
+Latent Dirichlet allocation (LDA) is a generative probabilistic model of a corpus. The basic idea is
+that documents are represented as random mixtures over latent topics, where each topic is characterized
+by a distribution over words.1
+LDA assumes the following generative process for each document w in a corpus D:
+1. Choose N ∼ Poisson(ξ).
+2. Choose θ ∼ Dir(α).
+3. For each of the N words wn:
+(a) Choose a topic zn ∼ Multinomial(θ).
+(b) Choose a word wn from p(wn |zn,β), a multinomial probability conditioned on the topic
+zn.
+Several simplifying assumptions are made in this basic model, some of which we remove in subsequent
+sections. First, the dimensionality k of the Dirichlet distribution (and thus the dimensionality
+of the topic variable z) is assumed known and fixed. Second, the word probabilities are parameterized
+by a k ×V matrix β where βi j = p(wj = 1|zi = 1), which for now we treat as a fixed quantity
+that is to be estimated. Finally, the Poisson assumption is not critical to anything that follows and
+more realistic document length distributions can be used as needed. Furthermore, note that N is
+independent of all the other data generating variables (θ and z). It is thus an ancillary variable and
+we will generally ignore its randomness in the subsequent development.
+A k-dimensional Dirichlet random variable θ can take values in the (k −1)-simplex (a k-vector
+θ lies in the (k−1)-simplex if θi ≥ 0, ∑k
+i=1 θi = 1), and has the following probability density on this
+simplex:
+word in the entire corpus (generally on a log scale, and again suitably normalized). The end result
+is a term-by-document matrix X whose columns contain the tf-idf values for each of the documents
+in the corpus. Thus the tf-idf scheme reduces documents of arbitrary length to fixed-length lists of
+numbers.
+While the tf-idf reduction has some appealing features—notably in its basic identification of sets
+of words that are discriminative for documents in the collection—the approach also provides a relatively
+small amount of reduction in description length and reveals little in the way of inter- or intradocument
+statistical structure. To address these shortcomings, IR researchers have proposed several
+other dimensionality reduction techniques, most notably latent semantic indexing (LSI) (Deerwester
+et al., 1990). LSI uses a singular value decomposition of the X matrix to identify a linear subspace
+in the space of tf-idf features that captures most of the variance in the collection. This approach can
+achieve significant compression in large collections. Furthermore, Deerwester et al. argue that the
+derived features of LSI, which are linear combinations of the original tf-idf features, can capture
+some aspects of basic linguistic notions such as synonymy and polysemy.
+To substantiate the claims regarding LSI, and to study its relative strengths and weaknesses, it is
+useful to develop a generative probabilistic model of text corpora and to study the ability of LSI to
+recover aspects of the generative model from data (Papadimitriou et al., 1998). Given a generative
+model of text, however, it is not clear why one should adopt the LSI methodology—one can attempt
+to proceed more directly, fitting the model to data using maximum likelihood or Bayesian methods.
+A significant step forward in this regard was made by Hofmann (1999), who presented the
+probabilistic LSI (pLSI) model, also known as the aspect model, as an alternative to LSI. The pLSI
+approach, which we describe in detail in Section 4.3, models each word in a document as a sample
+from a mixture model, where the mixture components are multinomial random variables that can be
+viewed as representations of “topics.” Thus each word is generated from a single topic, and different
+words in a document may be generated from different topics. Each document is represented as
+a list of mixing proportions for these mixture components and thereby reduced to a probability
+distribution on a fixed set of topics. This distribution is the “reduced description” associated with
+the document.
+While Hofmann’s work is a useful step toward probabilistic modeling of text, it is incomplete
+in that it provides no probabilistic model at the level of documents. In pLSI, each document is
+represented as a list of numbers (the mixing proportions for topics), and there is no generative
+probabilistic model for these numbers. This leads to several problems: (1) the number of parameters
+in the model grows linearly with the size of the corpus, which leads to serious problems with
+overfitting, and (2) it is not clear how to assign probability to a document outside of the training set.
+To see how to proceed beyond pLSI, let us consider the fundamental probabilistic assumptions
+underlying the class of dimensionality reduction methods that includes LSI and pLSI. All of these
+methods are based on the “bag-of-words” assumption—that the order of words in a document can
+be neglected. In the language of probability theory, this is an assumption of exchangeability for the
+words in a document (Aldous, 1985). Moreover, although less often stated formally, these methods
+also assume that documents are exchangeable; the specific ordering of the documents in a corpus
+can also be neglected.
+A classic representation theorem due to de Finetti (1990) establishes that any collection of exchangeable
+random variables has a representation as a mixture distribution—in general an infinite
+mixture. Thus, if we wish to consider exchangeable representations for documents and words, we
+need to consider mixture models that capture the exchangeability of both words and documents.
+994
+LATENT DIRICHLET ALLOCATION
+This line of thinking leads to the latent Dirichlet allocation (LDA) model that we present in the
+current paper.
+It is important to emphasize that an assumption of exchangeability is not equivalent to an assumption
+that the random variables are independent and identically distributed. Rather, exchangeability
+essentially can be interpreted as meaning “conditionally independent and identically distributed,”
+where the conditioning is with respect to an underlying latent parameter of a probability
+distribution. Conditionally, the joint distribution of the random variables is simple and factored
+while marginally over the latent parameter, the joint distribution can be quite complex. Thus, while
+an assumption of exchangeability is clearly a major simplifying assumption in the domain of text
+modeling, and its principal justification is that it leads to methods that are computationally efficient,
+the exchangeability assumptions do not necessarily lead to methods that are restricted to simple
+frequency counts or linear operations. We aim to demonstrate in the current paper that, by taking
+the de Finetti theorem seriously, we can capture significant intra-document statistical structure via
+the mixing distribution.
+It is also worth noting that there are a large number of generalizations of the basic notion of
+exchangeability, including various forms of partial exchangeability, and that representation theorems
+are available for these cases as well (Diaconis, 1988). Thus, while the work that we discuss in
+the current paper focuses on simple “bag-of-words” models, which lead to mixture distributions for
+single words (unigrams), our methods are also applicable to richer models that involve mixtures for
+larger structural units such as n-grams or paragraphs.
+The paper is organized as follows. In Section 2 we introduce basic notation and terminology.
+The LDA model is presented in Section 3 and is compared to related latent variable models in
+Section 4. We discuss inference and parameter estimation for LDA in Section 5. An illustrative
+example of fitting LDA to data is provided in Section 6. Empirical results in text modeling, text
+classification and collaborative filtering are presented in Section 7. Finally, Section 8 presents our
+conclusions.
+2. Notation and terminology
+We use the language of text collections throughout the paper, referring to entities such as “words,”
+“documents,” and “corpora.” This is useful in that it helps to guide intuition, particularly when
+we introduce latent variables which aim to capture abstract notions such as topics. It is important
+to note, however, that the LDA model is not necessarily tied to text, and has applications to other
+problems involving collections of data, including data from domains such as collaborative filtering,
+content-based image retrieval and bioinformatics. Indeed, in Section 7.3, we present experimental
+results in the collaborative filtering domain.
+Formally, we define the following terms:
+• A word is the basic unit of discrete data, defined to be an item from a vocabulary indexed by
+{1,...,V}. We represent words using unit-basis vectors that have a single component equal to
+one and all other components equal to zero. Thus, using superscripts to denote components,
+the vth word in the vocabulary is represented by a V-vector w such that wv = 1 and wu = 0 for
+u 6= v.
+• A document is a sequence of N words denoted by w = (w1,w2,...,wN), where wn is the nth
+word in the sequence.
+• A corpus is a collection of M documents denoted by D = {w1,w2,...,wM}.
+995
+BLEI, NG, AND JORDAN
+We wish to find a probabilistic model of a corpus that not only assigns high probability to
+members of the corpus, but also assigns high probability to other “similar” documents.
+3. Latent Dirichlet allocation
+Latent Dirichlet allocation (LDA) is a generative probabilistic model of a corpus. The basic idea is
+that documents are represented as random mixtures over latent topics, where each topic is characterized
+by a distribution over words.1
+LDA assumes the following generative process for each document w in a corpus D:
+1. Choose N ∼ Poisson(ξ).
+2. Choose θ ∼ Dir(α).
+3. For each of the N words wn:
+(a) Choose a topic zn ∼ Multinomial(θ).
+(b) Choose a word wn from p(wn |zn,β), a multinomial probability conditioned on the topic
+zn.
+Several simplifying assumptions are made in this basic model, some of which we remove in subsequent
+sections. First, the dimensionality k of the Dirichlet distribution (and thus the dimensionality
+of the topic variable z) is assumed known and fixed. Second, the word probabilities are parameterized
+by a k ×V matrix β where βi j = p(wj = 1|zi = 1), which for now we treat as a fixed quantity
+that is to be estimated. Finally, the Poisson assumption is not critical to anything that follows and
+more realistic document length distributions can be used as needed. Furthermore, note that N is
+independent of all the other data generating variables (θ and z). It is thus an ancillary variable and
+we will generally ignore its randomness in the subsequent development.
+A k-dimensional Dirichlet random variable θ can take values in the (k −1)-simplex (a k-vector
+θ lies in the (k−1)-simplex if θi ≥ 0, ∑k
+i=1 θi = 1), and has the following probability density on this
+simplex:

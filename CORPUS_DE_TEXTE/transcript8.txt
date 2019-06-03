@@ -1,0 +1,129 @@
+﻿Welcome back. In this module, we are going to
+talk about text classification or supervised learning for text. To start and set up the case,
+I want you to look at this paragraph. It is about a medical document. And I want you to think about
+the specialty that this relates to. Is it nephrology, neurology, or podiatry? Looking at the words,
+you would think that it's podiatry, because you have foot there, you have something to do with fungal
+infection and skin infection, and so on. And, nephrology,
+which is the science of kidneys or neurology that is about the brain,
+This is more closely related to the study of foot, so
+that's podiatry, right? Now, given the three classes that
+you have already, that's nephrology, neurology and podiatry,
+let's look at another paragraph. Here, you will see that it
+talks about kidney failure. And just by looking at the first few
+words you would know that this probably belongs to nephrology. Now think about how you
+made that decision. Did you use the work nephrology anywhere? It's not there in text. Then how did you know
+that it's nephrology? The icon is important, but when you
+are talking about text classification, you don't have that icon. I just put it up there. So you're looking at the words, so kidney
+failure or renal failure and you somehow magically know that nephrology relates
+to kidneys and renal diseases and so on. This is an important characteristic
+of identifying a class based on text. And what he just did is classification. So what is classification? You have a given set of classes, in this particular case we
+had these three classes. And note that I don't even have to tell
+you the name nephrology or neurology. I could just give them class one,
+two, three or these three icons. But you know that they
+are these three concepts, these three classes that you
+want to classify them into. And then the task is to assign
+the correct class label to a given input. There are a lot of examples of text
+classification when you look at it. For example,
+if you are looking at a news article, and depending on which page of
+the newspaper it belongs to, you would want to categorize it as
+politics, sports, or technology. There are many more classes, of course. But in this case, let's say we want to distinguish them
+into one of these three classes. Or you get an email and you want to label
+that email as a spam or not a spam. Should it go into spam folder? How does any mail client decide
+that it should go in this category? Basically, what is happening is there is
+a text classification model running time. Think of sentiment analysis. You read a movie review and
+just by reading it, you want to decide if it's a positive
+review or a negative review. The text classification can
+actually be at very scales. All of these are really at the scale
+of a document, and you could call a paragraph a document, or a news report
+a document, or an email a document. But you could also have text
+classification at a word level. So think of the problem
+of spelling correction. And you have weather written two ways. One means the climate,
+the other is a construct for the sentence. Which is the right spelling when
+you are writing a sentence? The weather is great. Is it the first one or the second one? What about the word color and the way that it's spelled in
+British English and American English? Depending on all the other words, and if
+suppose you're writing a BBC news article, or reading one, you are most
+likely to see the second spelling. The first spelling in that
+context would appear as an error. You need to understand a correct for
+those. That would be the spelling
+correction problem. All of these tasks are in general what
+are known as supervised learning tasks. It's supervised because just like
+humans learn from past experiences, machines learn from past instances. So, for example,
+in a supervised classification task, you have this training phase
+where information is gathered and a model is built and an inference
+phase where that model is applied. So, for example, you'll have a set of
+inputs that we call the labeled input, where we know that this
+particular instance is positive, this one is negative, and so on. So in this case, let's just do examples. Green and red, or light and
+dark, or positive and negative. And you did that set that
+the label set up instances and feed it into a classification algorithm. This classification algorithm
+will learn which instances appear to be more positive than negative
+and build a model for what it learns. Once you have the model,
+you can used it in the inference phase, where you have unlabeled input and
+then this model will take it and give out labels for those inputs,
+for those input instances. In this supervised learning, you learn
+a classification model on properties. So when we say instances,
+you're really looking at properties, or features of these instances, and
+the model that is learned is basically importance of sort, or weight,
+that is given to those properties. And all of this is basically learned
+from the labeled instances given to you. More formally, the set of attributes or
+features that represents the input is denoted by x, usually written
+as bold x, because it's a vector. It is a set of individual features,
+and in this particular case let's say there are n features.What
+would these n features be? Let's take an example of email and
+in order to take with it spam or not, you would say where does it come from? Does it have Kind of interesting
+words like Nigeria or prince or deposit money or
+something like that? So those would be attributes on which
+you make a decision whether this email should go in the spam folder or not. Then, you have the class label,
+the set of class labels is Y. Let's say there are k classes. If it's just two classes like positive and
+negative, then k will be 2. If it was this medical speciality
+example we saw where it's nephrology, neurology or podiatry, then k is 3. One of those classes is
+the class label assigned to the instance, and that is by small y. Once we have learned this
+classification model, we apply that model to new
+instances to predict the label. So when we look at these, there are some terminology of data
+sets that you would see very commonly. So again, there are two phases, the
+training phase and the inference phase. The training phase has labeled data set. And in general, in the inference
+phase you have unlabeled data set. Unlabeled data set is where
+you have all instances and you have the x defined,
+but you don't have a y. You don't have a label. Whereas in the labeled data set,
+you have the x and the y for every instance given to you. However, in training, you don't use the
+entire label set for training purposes. Because then you will not
+know how well your model is. So what you want to do is to use
+a part of it as training data where you actually learn parameters. Learn the model, but
+leave some aside as a validation data set, or it's sometimes called
+hold out data set. So that in the training phase,
+you can learn on the training data but then test, or evaluate, or
+set parameters on the validation data. And then, you want another data set
+to really test how well you do. We are to never use it in training. You don't set your
+parameters based on that. But you just evaluate on that,
+so that you can judge whether the model was really good or
+not on completely unseen data. You have seen all of these concepts
+in previous courses within this specialization that goes straight. But I want to kind of bring them here so that we have the context in
+which we're going to talk about. One last thing about classification and
+that's classification paradigms. We talked about cases when the set
+of possible labels are two, right? Positive and negative or green and red or
+yes and no or spam or not spam, right? All of these tasks are called
+binary classification tasks because the number of possible classes is two. When that increases, When the number
+of examples is more than two, number of classes I'm sorry,
+is more than two, it's called multi-class
+classification problem. And in some instances, you might want
+to label with more than one labels. And when that happens, when the data and
+classes are labeled by two or more labels,
+that is called multi-label classification. Typically, we will look at
+binary classification or multi-class classification, but there
+are some instances within this module and the scores where we will look at
+multi-label classification too. In general,
+when we talk about classification, we're talking about binary or
+multiclass classification. When you look at what questions to ask
+in a supervised learning scenario, in the training phase, the questions that you
+need to answer are what are the features? How do you represent them? How do you represent
+the input given to you? What is a classification model or
+the algorithm you're going to use? And what are the model parameters,
+depending on the model you use? These are the questions that you will
+answer while you're building your model. You need to know how do
+you represent input? How are they going to train, or
+what model are they going to train, and then what is the output
+of that training process? And in the inference phase, you need to define what
+are the expected performance measures? What is a good measure? How do you know that you
+have built a great model? What if a performance measure
+you'll use to determine that? And these are the questions you would
+answer when you are building a supervised learning model. The same thing applies to text. And in the next few videos we
+are going to answer these one by one.
